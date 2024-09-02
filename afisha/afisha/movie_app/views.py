@@ -1,26 +1,26 @@
-from django.db.models import Count
+from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Director, Movie, Review
+from .models import Directo, Movie, Review
 from rest_framework import status
 
-from .serializes import DirectorSerializer, MovieSerializer, ReviewSerializer
+from .serializes import DirectoSerializer, MovieSerializer, ReviewSerializer
 
 
 @api_view(http_method_names=['GET'])
 def directors_list_api_view(request):
-    directors = Director.objects.annotate(movies_count=Count('movie'))
-    lista_directos =DirectorSerializer(instance=directors, many=True).data
+    directos = Directo.objects.all()
+    lista_directos = DirectoSerializer(instance=directos, many=True).data
     return Response(data=lista_directos, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def directors_detail_api_view(request, id):
     try:
-        directo = Director.objects.get(id=id)
+        directo = Directo.objects.get(id=id)
     except:
         return Response(status=status.HTTP_404_NOT_FOUND,
                         data={'error': 'Directo not found'})
-    data =DirectorSerializer(directo).data
+    data = DirectoSerializer(directo).data
     return Response(data=data)
 
 

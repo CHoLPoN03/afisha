@@ -1,16 +1,11 @@
 from rest_framework import serializers
-from .models import Directo, Movie, Review
+from .models import Director, Movie, Review
 
 
-class DirectoSerializer(serializers.ModelSerializer):
+class DirectorSerializer(serializers.ModelSerializer):
+    movies_count = serializers.IntegerField()
     class Meta:
-        model = Directo
-        fields = '__all__'
-
-
-class MovieSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Movie
+        model = Director
         fields = '__all__'
 
 
@@ -20,5 +15,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
+class MovieSerializer(serializers.ModelSerializer):
+    director = DirectorSerializer(read_only=True)
+    all_reviews = ReviewSerializer(many=True, read_only=True)
+    class Meta:
+        model = Movie
+        fields = 'title description director all_reviews rating'.split()
+        depth = 1
 
