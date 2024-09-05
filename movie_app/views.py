@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Director, Movie, Review
 from rest_framework import status
 
-from .serializes import DirectorSerializer, MovieSerializer, ReviewSerializer
+from .serializes import DirectorSerializer, MovieSerializer, ReviewSerializer, MovieValidateSerializer
 
 
 @api_view(http_method_names=['GET', 'POST'])
@@ -15,7 +15,11 @@ def directors_list_create_api_view(request):
         return Response(data=lista_directos, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        name = request.data.get('name')
+        serializer = MovieValidateSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return Response(status=400,
+                            data=serializer.errors)
+        name = serializer.validated_data.get('name')
         directors = Director.objects.create(name=name)
         lista_directors =DirectorSerializer(instance=directors).data
 
@@ -35,6 +39,8 @@ def directors_detail_api_view(request, id):
         return Response(data=data)
 
     elif request.method == 'PUT':
+        serializer = DirectorSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         directo.name = request.data.get('name')
         directo.save()
         return Response(DirectorSerializer(directo).data, status=status.HTTP_201_CREATED)
@@ -54,10 +60,14 @@ def movies_list_create_api_view(request):
         return Response(data=lista_movies, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        title = request.data.get('title')
-        director_id = request.data.get('director_id')
-        description = request.data.get('description', 'No text')
-        duration = request.data.get('duration')
+        serializer = MovieValidateSerializer(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return Response(status=400,
+                            data=serializer.errors)
+        title = serializer.validated_data.get('title')
+        director_id = serializer.validated_data.get('director_id')
+        description = serializer.validated_data.get('description', 'No text')
+        duration = serializer.validated_data.get('duration')
 
         try:
             director = Director.objects.get(id=director_id)
@@ -86,6 +96,8 @@ def movies_detail_api_view(request, id):
         return Response(data=data)
 
     elif request.method == 'PUT':
+        serializer = MovieSerializer(movie, data=request.data)
+        serializer.is_valid(raise_exception=True)
         movie.title = request.data.get('title')
         director_id = request.data.get('director_id')
 
@@ -137,6 +149,9 @@ def reviews_detail_api_view(request, id):
         return Response(data=data)
 
     elif request.method == 'PUT':
+        serializer = ReviewSerializer(review, data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         review.text = request.data.get('text')
         review.stars = request.data.get('stars')
         review.movie_id = request.data.get('movie_id')
